@@ -43,7 +43,7 @@ public class CharacterSelectScene implements Scene {
 
     public CharacterSelectScene(GameSceneManager sceneManager) {
         stage = new Stage();
-        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
+        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
         selectionManager = CharacterSelectionManager.getInstance();
         characterTextures = new LinkedHashMap<>();
         characterButtons = new LinkedHashMap<>();
@@ -69,8 +69,6 @@ public class CharacterSelectScene implements Scene {
     private TextButton createStyledButton(String text) {
         TextButton button = new TextButton(text, skin);
         button.getLabel().setFontScale(0.45f);
-        button.getLabel().setColor(Color.SKY);
-        button.setColor(Color.ROYAL);
         return button;
     }
 
@@ -165,9 +163,9 @@ public class CharacterSelectScene implements Scene {
 
         for (Map.Entry<CharacterOption, TextButton> entry : characterButtons.entrySet()) {
             if (entry.getKey() == option) {
-                entry.getValue().setColor(Color.FOREST);
+                entry.getValue().setColor(Color.GREEN);
             } else {
-                entry.getValue().setColor(Color.ROYAL);
+                entry.getValue().setColor(Color.WHITE);
             }
         }
     }

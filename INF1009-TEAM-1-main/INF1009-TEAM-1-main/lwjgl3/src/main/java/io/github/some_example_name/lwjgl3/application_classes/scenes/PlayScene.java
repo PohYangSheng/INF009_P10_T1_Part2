@@ -137,7 +137,7 @@ public class PlayScene implements Scene, DialogEventListener {
         stage = new Stage();
         overlayStage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
+        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
         batch = new SpriteBatch();
 
         // Reset per-session state
@@ -462,17 +462,17 @@ public class PlayScene implements Scene, DialogEventListener {
 
         // Points label
         pointsLabel = new Label("Points: 100/" + targetPoint, skin);
-        pointsLabel.setColor(Color.GREEN);
+        pointsLabel.setColor(Color.GOLD);
         titleTable.add(pointsLabel).expandX().center().pad(10);
 
         // Food count label
         foodCountLabel = new Label("Food: 0/10", skin);
-        foodCountLabel.setColor(Color.YELLOW);
+        foodCountLabel.setColor(Color.ORANGE);
         titleTable.add(foodCountLabel).right().pad(10);
 
         // Lives label
         livesLabel = new Label("Lives: 3", skin);
-        livesLabel.setColor(Color.CYAN);
+        livesLabel.setColor(Color.YELLOW);
         titleTable.add(livesLabel).right().pad(10);
 
         // Dynamic game-state label (empty when NORMAL)

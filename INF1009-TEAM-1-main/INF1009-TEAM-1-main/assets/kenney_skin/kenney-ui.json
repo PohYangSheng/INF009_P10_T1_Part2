@@ -24,15 +24,15 @@ com.badlogic.gdx.graphics.Color: {
 		a: 1
 	}
 	field: {
-		r: 0.5058824
-		g: 0.9372549
-		b: 0.9137255
+		r: 1.0
+		g: 0.95
+		b: 0.85
 		a: 1
 	}
 	highlight: {
-		r: 0.29411766
-		g: 0.5529412
-		b: 0.54509807
+		r: 0.95
+		g: 0.75
+		b: 0.4
 		a: 1
 	}
 	red: {
@@ -42,9 +42,9 @@ com.badlogic.gdx.graphics.Color: {
 		a: 1
 	}
 	stone: {
-		r: 0
-		g: 0.25882354
-		b: 0.2509804
+		r: 0.35
+		g: 0.25
+		b: 0.2
 		a: 1
 	}
 	white: {
@@ -58,9 +58,9 @@ com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 	field: {
 		name: white
 		color: {
-			r: 0.5058824
-			g: 0.9372549
-			b: 0.9137255
+			r: 1.0
+			g: 0.95
+			b: 0.85
 			a: 1
 		}
 	}
@@ -76,18 +76,18 @@ com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 	shadow: {
 		name: white
 		color: {
-			r: 0
-			g: 0.12156863
-			b: 0.11372549
+			r: 0.2
+			g: 0.15
+			b: 0.1
 			a: 1
 		}
 	}
 	stone: {
 		name: white
 		color: {
-			r: 0
-			g: 0.25882354
-			b: 0.2509804
+			r: 0.35
+			g: 0.25
+			b: 0.2
 			a: 1
 		}
 	}
@@ -213,20 +213,20 @@ com.badlogic.gdx.scenes.scene2d.ui.SplitPane$SplitPaneStyle: {
 com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
 	default: {
 		font: subtitle
-		fontColor: field
+		fontColor: white
 		up: button
 		down: button-pressed
 	}
 	toggle: {
 		font: subtitle
-		fontColor: field
+		fontColor: white
 		up: button
 		down: button-pressed
 		checked: button-pressed
 	}
 	arcade: {
 		font: font
-		fontColor: field
+		fontColor: white
 		up: button-arcade
 		down: button-arcade-pressed
 	}
