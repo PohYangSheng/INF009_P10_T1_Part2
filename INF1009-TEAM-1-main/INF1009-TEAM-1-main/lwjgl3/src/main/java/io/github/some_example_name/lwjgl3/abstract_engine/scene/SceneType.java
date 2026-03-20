@@ -7,6 +7,7 @@ package io.github.some_example_name.lwjgl3.abstract_engine.scene;
  */
 public enum SceneType {
     HOME, // Main menu or home screen
+    CHARACTER_SELECT, // Character selection screen
     TUTORIAL, // Tutorial or instructions screen
     DIFFICULTY, // Difficulty selection screen
     PLAY, // Main gameplay screen

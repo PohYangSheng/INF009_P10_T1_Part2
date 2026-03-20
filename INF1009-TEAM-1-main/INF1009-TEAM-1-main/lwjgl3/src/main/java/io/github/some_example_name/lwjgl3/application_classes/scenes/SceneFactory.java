@@ -28,6 +28,8 @@ public class SceneFactory {
         switch (sceneType) {
             case HOME:
                 return new HomeScene(sceneManager);
+            case CHARACTER_SELECT:
+                return new CharacterSelectScene(sceneManager);
             case TUTORIAL:
                 return new TutorialScene(sceneManager);
             case DIFFICULTY:

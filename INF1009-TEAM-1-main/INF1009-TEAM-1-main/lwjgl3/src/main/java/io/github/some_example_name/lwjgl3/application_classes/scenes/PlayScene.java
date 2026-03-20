@@ -44,6 +44,7 @@ import io.github.some_example_name.lwjgl3.application_classes.utilities.DialogEv
 import io.github.some_example_name.lwjgl3.application_classes.utilities.DialogPopUpManager;
 import io.github.some_example_name.lwjgl3.application_classes.utilities.FoodDictionary;
 import io.github.some_example_name.lwjgl3.application_classes.utilities.FoodGenerator;
+import io.github.some_example_name.lwjgl3.application_classes.utilities.CharacterSelectionManager;
 import io.github.some_example_name.lwjgl3.application_classes.utilities.GameDifficulty;
 import io.github.some_example_name.lwjgl3.application_classes.utilities.GameDifficulty.Difficulty;
 import io.github.some_example_name.lwjgl3.application_classes.utilities.GameStateManager;
@@ -211,7 +212,7 @@ public class PlayScene implements Scene, DialogEventListener {
         secretWallTexture = new Texture("entities_images/green.png");
         floorTexture = new Texture("entities_images/floor.png");
         Texture enemyTexture = new Texture("entities_images/angry_chef.png");
-        Texture playerTexture = new Texture("entities_images/player.png");
+        Texture playerTexture = new Texture(CharacterSelectionManager.getInstance().getSelectedTexturePath());
         nutritionistTexture = new Texture("entities_images/nutritionist.png");
 
         // Generate game world components
