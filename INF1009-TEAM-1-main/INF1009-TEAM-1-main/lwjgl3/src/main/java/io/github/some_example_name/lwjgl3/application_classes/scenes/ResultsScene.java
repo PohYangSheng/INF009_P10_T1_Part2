@@ -37,7 +37,7 @@ public class ResultsScene implements Scene {
         Gdx.input.setInputProcessor(stage);
         
         // Load visual resources
-        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
+        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
 
         // Create and style quit button
         quitBtn = createQuitButton();
@@ -54,6 +54,8 @@ public class ResultsScene implements Scene {
     private TextButton createQuitButton() {
         TextButton button = new TextButton("Quit", skin);
         button.getLabel().setFontScale(0.5f);
+        button.getLabel().setColor(Color.SKY);
+        button.setColor(Color.ROYAL);
         return button;
     }
 
@@ -130,7 +132,10 @@ public class ResultsScene implements Scene {
         // Add quit button
         buttonTable.add(quitBtn)
             .padBottom(30)
-            .size(150, 45)
+            .size(
+                quitBtn.getWidth() * 0.6f, 
+                quitBtn.getHeight() * 0.6f
+            )
             .expandX()
             .center();
 

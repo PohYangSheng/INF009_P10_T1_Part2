@@ -41,7 +41,7 @@ public class TutorialScene implements Scene {
         Gdx.input.setInputProcessor(stage);
         
         // Load visual resources
-        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
+        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
 
         // Create and style back button
         backBtn = createBackButton();
@@ -62,6 +62,8 @@ public class TutorialScene implements Scene {
     private TextButton createBackButton() {
         TextButton button = new TextButton("Back", skin);
         button.getLabel().setFontScale(0.5f);
+        button.getLabel().setColor(Color.SKY);
+        button.setColor(Color.ROYAL);
         return button;
     }
 
@@ -86,7 +88,10 @@ public class TutorialScene implements Scene {
         rootTable.add(tutorialContentTable).expand().row();
 
         // Add back button
-        rootTable.add(backBtn).size(150, 45).padBottom(30).align(Align.center);
+        rootTable.add(backBtn).size(
+            backBtn.getWidth() * 0.7f, 
+            backBtn.getHeight() * 0.7f
+        ).padBottom(30).align(Align.center);
 
         // Set back button listener
         backBtn.addListener(new ClickListener() {

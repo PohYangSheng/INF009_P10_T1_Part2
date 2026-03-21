@@ -1,89 +1,125 @@
 package io.github.some_example_name.lwjgl3.abstract_engine.io;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.IntArray;
 
-/**
- * Handles mouse input.
- * Tracks mouse position and button states, and executes bound actions when buttons are pressed.
- */
+import java.util.HashMap;
+import java.util.Map;
+
 public class Mouse implements InputDevice {
-    private final IntMap<Object[]> mouseBindings;
+    private static final int CAPACITY = 15;
+    private static final int MAX_BUTTON = 4;
+
+    // After 20 frames mouse button is treated as held
+    private static final int HELD_START_FRAMES = 20;
+
+    // Mouse position
     private float x;
     private float y;
 
-    /**
-     * Creates a new mouse input handler.
-     */
-    public Mouse() {
-        mouseBindings = new IntMap<>();
-    }
+    // Buttons clicked this frame
+    private final IntArray buttonsPressedThisFrame;
 
-    /**
-     * Processes mouse input and executes bound actions.
-     * Should be called once per frame.
-     */
-    @Override
-    public void handleInput() {
-        for (IntMap.Entry<Object[]> entry : mouseBindings.entries()) {
-            Object[] binding = entry.value;
-            Runnable action = (Runnable) binding[0];
-            boolean isJustPressed = (boolean) binding[1];
-            boolean isButtonPressed;
-            
-            if (isJustPressed) {
-                isButtonPressed = Gdx.input.isButtonJustPressed(entry.key);
-            } 
-            else {
-                isButtonPressed = Gdx.input.isButtonPressed(entry.key);
-            }
+    // Buttons held long enough
+    private final IntArray buttonsHeldThisFrame;
 
-            if (isButtonPressed) {
-                action.run();  
-            }
+    // Count how many frames each button has been held
+    private final int[] heldFrames;
+
+    private static class Bind {
+        private final Runnable action;
+        private final boolean justPressed;
+
+        public Bind(Runnable action, boolean justPressed) {
+            this.action = action;
+            this.justPressed = justPressed;
         }
     }
-    
-    /**
-     * Gets the current X coordinate of the mouse cursor.
-     * 
-     * @return The X coordinate in screen coordinates
-     */
+
+    private final Map<Integer, Bind> binds;
+
+    // Default constructor
+    public Mouse() {
+        buttonsPressedThisFrame = new IntArray(false, CAPACITY);
+        buttonsHeldThisFrame = new IntArray(false, CAPACITY);
+        heldFrames = new int[MAX_BUTTON + 1];
+        binds = new HashMap<Integer, Bind>();
+    }
+
+    // Getters
     public float getX() {
-        this.x = Gdx.input.getX();
         return x;
     }
-    
-    /**
-     * Gets the current Y coordinate of the mouse cursor.
-     * 
-     * @return The Y coordinate in screen coordinates
-     */
+
     public float getY() {
-        this.y = Gdx.input.getY();
         return y;
     }
 
-    /**
-     * Binds an action to a mouse button.
-     * 
-     * @param button Button code to bind (use LibGDX Buttons constants)
-     * @param action Action to execute when the button is activated
-     * @param isJustPressed If true, the action triggers only on initial press;
-     *                      if false, it triggers continuously while held
-     */
-    @Override
-    public void addBind(int button, Runnable action, boolean isJustPressed) {
-        mouseBindings.put(button, new Object[]{action, isJustPressed});
+    public int[] getButtonsPressedThisFrame() {
+        return buttonsPressedThisFrame.toArray();
     }
 
-    /**
-     * Removes a binding for the specified button.
-     * 
-     * @param button Button code to unbind
-     */
+    public int[] getButtonsHeldThisFrame() {
+        return buttonsHeldThisFrame.toArray();
+    }
+
+    // Setters
+    private void setX(float x) {
+        this.x = x;
+    }
+
+    private void setY(float y) {
+        this.y = y;
+    }
+
     @Override
-    public void removeBind(int button) {
-        mouseBindings.remove(button);
+    public void addBind(int keyOrButton, Runnable action, boolean isJustPressed) {
+        if (action == null) {
+            return;
+        }
+        binds.put(keyOrButton, new Bind(action, isJustPressed));
+    }
+
+    @Override
+    public void removeBind(int keyOrButton) {
+        binds.remove(keyOrButton);
+    }
+
+    @Override
+    public void handleInput() {
+        buttonsPressedThisFrame.clear();
+        buttonsHeldThisFrame.clear();
+
+        setX(Gdx.input.getX());
+        setY(Gdx.input.getY());
+
+        for (int button = 0; button <= MAX_BUTTON; button++) {
+            if (Gdx.input.isButtonJustPressed(button)) {
+                buttonsPressedThisFrame.add(button);
+                heldFrames[button] = 0;
+            } else if (Gdx.input.isButtonPressed(button)) {
+                heldFrames[button]++;
+                if (heldFrames[button] >= HELD_START_FRAMES) {
+                    buttonsHeldThisFrame.add(button);
+                }
+            } else {
+                heldFrames[button] = 0;
+            }
+        }
+
+        for (Map.Entry<Integer, Bind> e : binds.entrySet()) {
+            int button = e.getKey();
+            Bind bind = e.getValue();
+
+            if (bind.justPressed) {
+                if (Gdx.input.isButtonJustPressed(button)) {
+                    bind.action.run();
+                }
+            } else {
+                if (Gdx.input.isButtonPressed(button)) {
+                    bind.action.run();
+                }
+            }
+        }
     }
 }

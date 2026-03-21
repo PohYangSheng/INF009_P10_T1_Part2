@@ -1,6 +1,6 @@
 package io.github.some_example_name.lwjgl3.application_classes.collision_detectors;
 
-import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioPlayer;
+import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.collision.EntityCollisionDetector;
 import io.github.some_example_name.lwjgl3.application_classes.entities.Enemy;
 import io.github.some_example_name.lwjgl3.application_classes.entities.Player;
@@ -33,12 +33,12 @@ public class PlayerCollideEnemyDetector extends EntityCollisionDetector<Player, 
 
         if (manager.getCurrentState() == GameStateManager.GameState.SECRET) {
             // SECRET mode: eat the enemy
-            AudioPlayer.getInstance().playSFX("SFX/crunch.mp3");
+            AudioManager.getInstance().playSFX("SFX/crunch.mp3");
             enemy.setToBeRemoved();
             player.adjustPoints(100);
         } else {
             // NORMAL / BAD mode: lose a life
-            AudioPlayer.getInstance().playSFX("SFX/bad.mp3");
+            AudioManager.getInstance().playSFX("SFX/bad.mp3");
             manager.loseLife();
             // Setting health to 0 signals PlayScene to check lives and respawn/end
             player.setHealth(0);

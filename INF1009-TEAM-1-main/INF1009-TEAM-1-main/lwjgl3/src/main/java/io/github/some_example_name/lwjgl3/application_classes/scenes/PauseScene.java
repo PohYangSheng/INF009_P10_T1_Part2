@@ -12,7 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
-import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioPlayer;
+import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.io.IOManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.scene.Scene;
 import io.github.some_example_name.lwjgl3.abstract_engine.scene.SceneTransitionType;
@@ -43,10 +43,10 @@ public class PauseScene implements Scene {
         Gdx.input.setInputProcessor(stage);
         
         // Load visual resources
-        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
+        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
         
         // Set pause scene music
-        AudioPlayer.getInstance().setSceneBGM("background_music/pause.mp3");
+        AudioManager.getInstance().setSceneBGM("background_music/pause.mp3");
 
         // Create and style buttons
         resumeBtn = createStyledButton("Resume");
@@ -70,6 +70,8 @@ public class PauseScene implements Scene {
     private TextButton createStyledButton(String text) {
         TextButton button = new TextButton(text, skin);
         button.getLabel().setFontScale(0.5f);
+        button.getLabel().setColor(Color.SKY);
+        button.setColor(Color.ROYAL);
         return button;
     }
 
@@ -115,10 +117,11 @@ public class PauseScene implements Scene {
         buttonTable.setFillParent(true);
         buttonTable.center();
 
-        // Add buttons with spacing
-        float buttonWidth = 150;
-        float buttonHeight = 45;
+        // Set consistent button sizing
+        float buttonWidth = resumeBtn.getWidth() * 0.6f;
+        float buttonHeight = resumeBtn.getHeight() * 0.6f;
 
+        // Add buttons with spacing
         buttonTable.add(resumeBtn).spaceTop(30).size(buttonWidth, buttonHeight).expandX().center().row();
         buttonTable.add(restartBtn).spaceTop(10).size(buttonWidth, buttonHeight).expandX().center().row();
         buttonTable.add(quitBtn).spaceTop(10).size(buttonWidth, buttonHeight).expandX().center();

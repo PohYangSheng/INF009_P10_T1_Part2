@@ -42,7 +42,7 @@ public class DifficultyScene implements Scene {
         Gdx.input.setInputProcessor(stage);
         
         // Load visual resources
-        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
+        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
 
         // Create and style buttons
         easyBtn = createStyledButton("Easy");
@@ -63,6 +63,8 @@ public class DifficultyScene implements Scene {
     private TextButton createStyledButton(String text) {
         TextButton button = new TextButton(text, skin);
         button.getLabel().setFontScale(0.5f);
+        button.getLabel().setColor(Color.SKY);
+        button.setColor(Color.ROYAL);
         return button;
     }
 
@@ -112,13 +114,14 @@ public class DifficultyScene implements Scene {
         buttonTable.setFillParent(true);
         buttonTable.center();
 
-        // Add difficulty buttons side by side
-        float buttonWidth = 130;
-        float buttonHeight = 45;
+        // Set consistent button sizing
+        float buttonWidth = easyBtn.getWidth() * 0.6f;
+        float buttonHeight = easyBtn.getHeight() * 0.6f;
 
-        buttonTable.add(easyBtn).pad(10).size(buttonWidth, buttonHeight);
-        buttonTable.add(normalBtn).pad(10).size(buttonWidth, buttonHeight);
-        buttonTable.add(hardBtn).pad(10).size(buttonWidth, buttonHeight);
+        // Add difficulty buttons
+        buttonTable.add(easyBtn).padBottom(10).size(buttonWidth, buttonHeight).expandX().center().row();
+        buttonTable.add(normalBtn).padBottom(10).size(buttonWidth, buttonHeight).expandX().center().row();
+        buttonTable.add(hardBtn).padBottom(10).size(buttonWidth, buttonHeight).expandX().center();
 
         // Set button listeners
         easyBtn.addListener(createDifficultyListener(sceneManager, Difficulty.EASY));
@@ -140,7 +143,10 @@ public class DifficultyScene implements Scene {
         backTable.bottom();
 
         // Add back button
-        backTable.add(backBtn).padBottom(30).size(150, 45).expandX().center();
+        backTable.add(backBtn).padBottom(30).size(
+            backBtn.getWidth() * 0.6f, 
+            backBtn.getHeight() * 0.6f
+        ).expandX().center();
 
         // Set back button listener
         backBtn.addListener(new ClickListener() {

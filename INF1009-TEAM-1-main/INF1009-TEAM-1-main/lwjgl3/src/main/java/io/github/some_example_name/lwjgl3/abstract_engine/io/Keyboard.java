@@ -1,67 +1,103 @@
 package io.github.some_example_name.lwjgl3.abstract_engine.io;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.IntMap;
+import com.badlogic.gdx.utils.IntArray;
 
-/**
- * Handles keyboard input.
- * Tracks key states and executes bound actions when keys are pressed.
- */
+import java.util.HashMap;
+import java.util.Map;
+
 public class Keyboard implements InputDevice {
-    private final IntMap<Object[]> keyBindings;
+    private static final int CAPACITY = 15;
+    private static final int MAX_KEYCODE = 255;
 
-    /**
-     * Creates a new keyboard input handler.
-     */
-    public Keyboard() {
-        keyBindings = new IntMap<>();
-    }
+    // After 20 frames keyboard button is treated as held
+    private static final int HELD_START_FRAMES = 20;
 
-    /**
-     * Processes keyboard input and executes bound actions.
-     * Should be called once per frame.
-     */
-    @Override
-    public void handleInput() {
-        for (IntMap.Entry<Object[]> entry : keyBindings.entries()) {
-            Object[] binding = entry.value;
-            Runnable action = (Runnable) binding[0];
-            boolean isJustPressed = (boolean) binding[1];
-            boolean isKeyPressed;
-            
-            if (isJustPressed) {
-                isKeyPressed = Gdx.input.isKeyJustPressed(entry.key);
-            } 
-            else {
-                isKeyPressed = Gdx.input.isKeyPressed(entry.key);
-            }
+    // Keys that were pressed this frame
+    private final IntArray keysPressedThisFrame;
 
-            if (isKeyPressed) {
-                action.run();  
-            }
+    // Keys that have been held long enough
+    private final IntArray keysHeldThisFrame;
+
+    // Count how many frames each key has been held
+    private final int[] heldFrames;
+
+    private static class Bind {
+        private final Runnable action;
+        private final boolean justPressed;
+
+        public Bind(Runnable action, boolean justPressed) {
+            this.action = action;
+            this.justPressed = justPressed;
         }
     }
 
-    /**
-     * Binds an action to a keyboard key.
-     * 
-     * @param key Key code to bind (use LibGDX Keys constants)
-     * @param action Action to execute when the key is activated
-     * @param isJustPressed If true, the action triggers only on initial press;
-     *                     if false, it triggers continuously while held
-     */
-    @Override
-    public void addBind(int key, Runnable action, boolean isJustPressed) {
-        keyBindings.put(key, new Object[]{action, isJustPressed});
+    private final Map<Integer, Bind> binds;
+
+    // Default constructor
+    public Keyboard() {
+        keysPressedThisFrame = new IntArray(false, CAPACITY);
+        keysHeldThisFrame = new IntArray(false, CAPACITY);
+        heldFrames = new int[MAX_KEYCODE + 1];
+        binds = new HashMap<Integer, Bind>();
     }
 
-    /**
-     * Removes a binding for the specified key.
-     * 
-     * @param key Key code to unbind
-     */
+    // Getters
+    public int[] getKeysPressedThisFrame() {
+        return keysPressedThisFrame.toArray();
+    }
+
+    public int[] getKeysHeldThisFrame() {
+        return keysHeldThisFrame.toArray();
+    }
+
     @Override
-    public void removeBind(int key) {
-        keyBindings.remove(key);
+    public void addBind(int keyOrButton, Runnable action, boolean isJustPressed) {
+        if (action == null) {
+            return;
+        }
+        binds.put(keyOrButton, new Bind(action, isJustPressed));
+    }
+
+    @Override
+    public void removeBind(int keyOrButton) {
+        binds.remove(keyOrButton);
+    }
+
+    @Override
+    public void handleInput() {
+        keysPressedThisFrame.clear();
+        keysHeldThisFrame.clear();
+
+        // Check every keycode and decide if pressed or held
+        for (int key = 0; key <= MAX_KEYCODE; key++) {
+            if (Gdx.input.isKeyJustPressed(key)) {
+                keysPressedThisFrame.add(key);
+                heldFrames[key] = 0;
+            } else if (Gdx.input.isKeyPressed(key)) {
+                heldFrames[key]++;
+                if (heldFrames[key] >= HELD_START_FRAMES) {
+                    keysHeldThisFrame.add(key);
+                }
+            } else {
+                heldFrames[key] = 0;
+            }
+        }
+
+        // Run binds
+        for (Map.Entry<Integer, Bind> e : binds.entrySet()) {
+            int key = e.getKey();
+            Bind bind = e.getValue();
+
+            if (bind.justPressed) {
+                if (Gdx.input.isKeyJustPressed(key)) {
+                    bind.action.run();
+                }
+            } else {
+                if (Gdx.input.isKeyPressed(key)) {
+                    bind.action.run();
+                }
+            }
+        }
     }
 }

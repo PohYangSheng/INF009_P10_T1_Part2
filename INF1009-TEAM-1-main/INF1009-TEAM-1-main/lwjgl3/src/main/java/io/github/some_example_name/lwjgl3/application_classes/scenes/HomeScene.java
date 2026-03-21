@@ -6,11 +6,8 @@ package io.github.some_example_name.lwjgl3.application_classes.scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -23,7 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
-import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioPlayer;
+import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.io.IOManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.scene.Scene;
 import io.github.some_example_name.lwjgl3.abstract_engine.scene.SceneTransitionType;
@@ -46,8 +43,6 @@ public class HomeScene implements Scene {
     private final Skin skin;
     private final Texture homeBackground;
     private final IOManager ioManager;
-    private final BitmapFont titleFont;
-    private final BitmapFont taglineFont;
 
     /**
      * Constructs the home scene.
@@ -61,25 +56,10 @@ public class HomeScene implements Scene {
         
         // Load visual resources
         homeBackground = new Texture(Gdx.files.internal("background_images/homebackground.jpg"));
-        skin = new Skin(Gdx.files.internal("kenney_skin/kenney-ui.json"));
-        
-        // Load custom title font (larger size for the game name)
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("super-adorable-font/SuperAdorable-MAvyp.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        param.size = 96;
-        param.color = new Color(0.2f, 1f, 0.6f, 1f);
-        param.borderWidth = 2;
-        param.borderColor = Color.BLACK;
-        titleFont = generator.generateFont(param);
-        
-        FreeTypeFontGenerator.FreeTypeFontParameter taglineParam = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        taglineParam.size = 28;
-        taglineParam.color = Color.BLACK;
-        taglineFont = generator.generateFont(taglineParam);
-        generator.dispose();
+        skin = new Skin(Gdx.files.internal("pixthulhu/skin/pixthulhu-ui.json"));
         
         // Set background music
-        AudioPlayer.getInstance().setSceneBGM("background_music/home.mp3");
+        AudioManager.getInstance().setSceneBGM("background_music/home.mp3");
 
         // Create and style buttons
         startBtn = createStyledButton("Start");
@@ -89,7 +69,7 @@ public class HomeScene implements Scene {
         // Create volume slider
         volumeSlider = createVolumeSlider();
         volumeLabel = new Label("Volume:", skin);
-        volumeLabel.setColor(Color.WHITE);
+        volumeLabel.setColor(Color.YELLOW);
 
         // Create and populate scene layout
         createSceneLayout(sceneManager);
@@ -107,6 +87,8 @@ public class HomeScene implements Scene {
     private TextButton createStyledButton(String text) {
         TextButton button = new TextButton(text, skin);
         button.getLabel().setFontScale(0.5f);
+        button.getLabel().setColor(Color.SKY);
+        button.setColor(Color.ROYAL);
         return button;
     }
     
@@ -120,7 +102,7 @@ public class HomeScene implements Scene {
         Slider slider = new Slider(0f, 1f, 0.05f, false, skin);
         
         // Set initial value from AudioPlayer's current volume
-        float currentVolume = AudioPlayer.getInstance().getVolume();
+        float currentVolume = AudioManager.getInstance().getVolume();
         slider.setValue(currentVolume);
         
         // Add listener to update volume when slider is moved
@@ -128,7 +110,7 @@ public class HomeScene implements Scene {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 float volume = slider.getValue();
-                AudioPlayer.getInstance().setVolume(volume);
+                AudioManager.getInstance().setVolume(volume);
             }
         });
         
@@ -169,13 +151,9 @@ public class HomeScene implements Scene {
         titleTable.setFillParent(true);
         titleTable.top();
 
-        LabelStyle titleStyle = new LabelStyle(titleFont, Color.WHITE);
-        Label label = new Label("Munch Maze", titleStyle);
-        titleTable.add(label).center().padTop(20).row();
-
-        LabelStyle taglineStyle = new LabelStyle(taglineFont, Color.BLACK);
-        Label tagline = new Label("Find your way. Feed your hunger.", taglineStyle);
-        titleTable.add(tagline).center().padTop(4);
+        Label label = new Label("Hungry Dash", skin, "title");
+        label.setColor(Color.YELLOW);
+        titleTable.add(label).center().padTop(20);
 
         return titleTable;
     }
@@ -191,9 +169,9 @@ public class HomeScene implements Scene {
         buttonTable.setFillParent(true);
         buttonTable.center().padTop(170);
 
-        // Add buttons with padding so text fits inside
-        float buttonWidth = 150;
-        float buttonHeight = 45;
+        // Add buttons with consistent sizing
+        float buttonWidth = startBtn.getWidth() * 0.6f;
+        float buttonHeight = startBtn.getHeight() * 0.6f;
 
         buttonTable.add(startBtn).size(buttonWidth, buttonHeight).row();
         buttonTable.add(tutBtn).padTop(10).size(buttonWidth, buttonHeight).row();
@@ -256,7 +234,5 @@ public class HomeScene implements Scene {
         stage.dispose();
         skin.dispose();
         homeBackground.dispose();
-        titleFont.dispose();
-        taglineFont.dispose();
     }
 }

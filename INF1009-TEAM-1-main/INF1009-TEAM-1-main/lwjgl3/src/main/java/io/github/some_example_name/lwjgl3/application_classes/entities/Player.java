@@ -68,11 +68,17 @@ public class Player extends MovableEntity implements Collidable, UserMovable {
      */
     @Override
     public void move(Direction direction) {
+        move(direction, 1.0f);
+    }
+
+    // Overload: lets the caller slow down or speed up movement
+    public void move(Direction direction, float speedMultiplier) {
+
         float deltaTime = Gdx.graphics.getDeltaTime();
         
         // Set velocity based on direction
-        velocity.x = direction.getX() * speed * 200;
-        velocity.y = direction.getY() * speed * 200;
+        velocity.x = direction.getX() * speed * 200 * speedMultiplier;
+        velocity.y = direction.getY() * speed * 200 * speedMultiplier;
         lastDirection.set(direction.getX(), direction.getY());
         
         // Move the character
@@ -81,7 +87,8 @@ public class Player extends MovableEntity implements Collidable, UserMovable {
         
         // Apply friction to gradually slow down
         velocity.scl(FRICTION);
-    }
+        }
+
     
     /**
      * Gets the last movement direction vector.

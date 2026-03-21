@@ -1,6 +1,6 @@
 package io.github.some_example_name.lwjgl3.application_classes.collision_detectors;
 
-import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioPlayer;
+import io.github.some_example_name.lwjgl3.abstract_engine.audio.AudioManager;
 import io.github.some_example_name.lwjgl3.abstract_engine.collision.EntityCollisionDetector;
 import io.github.some_example_name.lwjgl3.abstract_engine.collision.Removable;
 import io.github.some_example_name.lwjgl3.application_classes.entities.Nutritionist;
@@ -54,7 +54,7 @@ public class PlayerCollideNutritionistDetector extends EntityCollisionDetector<P
         if (nutritionist.shouldBeRemoved()) return;
         
         // Play sound effect
-        AudioPlayer.getInstance().playSFX("SFX/nutritionist.mp3");
+        AudioManager.getInstance().playSFX("SFX/nutritionist.mp3");
         
         // Give player health bonus
         player.adjustHealth(5);
