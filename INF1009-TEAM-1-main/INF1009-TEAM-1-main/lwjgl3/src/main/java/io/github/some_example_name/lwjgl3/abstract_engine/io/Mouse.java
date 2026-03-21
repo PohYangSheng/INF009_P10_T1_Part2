@@ -1,89 +1,120 @@
 package io.github.some_example_name.lwjgl3.abstract_engine.io;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.IntMap;
 
 /**
  * Handles mouse input.
- * Tracks mouse position and button states, and executes bound actions when buttons are pressed.
+ * - Tracks buttons pressed this frame (one-time)
+ * - Tracks buttons held (continuous after a short delay)
+ * - Tracks mouse position
+ * - Supports simple button bindings through IOManager
  */
-public class Mouse implements InputDevice {
-    private final IntMap<Object[]> mouseBindings;
+public class Mouse implements InputDevice, DeviceHandler {
+
+    private static final int CAPACITY = 15;
+    private static final int MAX_BUTTON = 4;
+    // After 20 frames a button is treated as held
+    private static final int HELD_START_FRAMES = 20;
+
     private float x;
     private float y;
 
-    /**
-     * Creates a new mouse input handler.
-     */
+    private final IntArray buttonsPressedThisFrame;
+    private final IntArray buttonsHeldThisFrame;
+    private final int[] heldFrames;
+
+    // Button binds (Runnable + isJustPressed)
+    private final IntMap<Object[]> buttonBindings;
+
+    // Default constructor
     public Mouse() {
-        mouseBindings = new IntMap<>();
+        buttonsPressedThisFrame = new IntArray(false, CAPACITY);
+        buttonsHeldThisFrame = new IntArray(false, CAPACITY);
+        heldFrames = new int[MAX_BUTTON + 1];
+        buttonBindings = new IntMap<>();
     }
 
-    /**
-     * Processes mouse input and executes bound actions.
-     * Should be called once per frame.
-     */
-    @Override
-    public void handleInput() {
-        for (IntMap.Entry<Object[]> entry : mouseBindings.entries()) {
-            Object[] binding = entry.value;
-            Runnable action = (Runnable) binding[0];
-            boolean isJustPressed = (boolean) binding[1];
-            boolean isButtonPressed;
-            
-            if (isJustPressed) {
-                isButtonPressed = Gdx.input.isButtonJustPressed(entry.key);
-            } 
-            else {
-                isButtonPressed = Gdx.input.isButtonPressed(entry.key);
-            }
-
-            if (isButtonPressed) {
-                action.run();  
-            }
-        }
-    }
-    
-    /**
-     * Gets the current X coordinate of the mouse cursor.
-     * 
-     * @return The X coordinate in screen coordinates
-     */
+    // Getters
     public float getX() {
-        this.x = Gdx.input.getX();
         return x;
     }
-    
-    /**
-     * Gets the current Y coordinate of the mouse cursor.
-     * 
-     * @return The Y coordinate in screen coordinates
-     */
+
     public float getY() {
-        this.y = Gdx.input.getY();
         return y;
     }
 
-    /**
-     * Binds an action to a mouse button.
-     * 
-     * @param button Button code to bind (use LibGDX Buttons constants)
-     * @param action Action to execute when the button is activated
-     * @param isJustPressed If true, the action triggers only on initial press;
-     *                      if false, it triggers continuously while held
-     */
-    @Override
-    public void addBind(int button, Runnable action, boolean isJustPressed) {
-        mouseBindings.put(button, new Object[]{action, isJustPressed});
+    public int[] getButtonsPressedThisFrame() {
+        return buttonsPressedThisFrame.toArray();
     }
 
-    /**
-     * Removes a binding for the specified button.
-     * 
-     * @param button Button code to unbind
-     */
+    public int[] getButtonsHeldThisFrame() {
+        return buttonsHeldThisFrame.toArray();
+    }
+
+    // Setters
+    private void setX(float x) {
+        this.x = x;
+    }
+
+    private void setY(float y) {
+        this.y = y;
+    }
+
+    @Override
+    public void handleInput() {
+        buttonsPressedThisFrame.clear();
+        buttonsHeldThisFrame.clear();
+
+        setX(Gdx.input.getX());
+        setY(Gdx.input.getY());
+
+        for (int button = 0; button <= MAX_BUTTON; button++) {
+
+            if (Gdx.input.isButtonJustPressed(button)) {
+                buttonsPressedThisFrame.add(button);
+                heldFrames[button] = 0;
+            }
+            else if (Gdx.input.isButtonPressed(button)) {
+                heldFrames[button]++;
+
+                if (heldFrames[button] >= HELD_START_FRAMES) {
+                    buttonsHeldThisFrame.add(button);
+                }
+            }
+            else {
+                heldFrames[button] = 0;
+            }
+        }
+
+        // Execute any binds after state is updated
+        for (IntMap.Entry<Object[]> entry : buttonBindings.entries()) {
+            Object[] binding = entry.value;
+            Runnable action = (Runnable) binding[0];
+            boolean isJustPressed = (boolean) binding[1];
+
+            boolean active;
+            if (isJustPressed) {
+                active = Gdx.input.isButtonJustPressed(entry.key);
+            }
+            else {
+                active = Gdx.input.isButtonPressed(entry.key);
+            }
+
+            if (active) {
+                action.run();
+            }
+        }
+    }
+
+    @Override
+    public void addBind(int button, Runnable action, boolean isJustPressed) {
+        buttonBindings.put(button, new Object[]{action, isJustPressed});
+    }
+
     @Override
     public void removeBind(int button) {
-        mouseBindings.remove(button);
+        buttonBindings.remove(button);
     }
 }

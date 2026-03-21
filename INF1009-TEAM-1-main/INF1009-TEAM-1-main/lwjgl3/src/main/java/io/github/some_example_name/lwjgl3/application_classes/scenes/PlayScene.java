@@ -75,6 +75,10 @@ public class PlayScene implements Scene, DialogEventListener {
     // Dynamic game-state system (NORMAL / BAD / SECRET)
     private static final float BAD_MODE_DURATION    = 8f;
     private static final float SECRET_MODE_DURATION = 15f;
+
+    // Stronger slow-down for BAD mode (balanced by undoing the same amount on exit)
+    private static final float BAD_SPEED_DELTA = -0.2f;
+
     private float stateTimer = 0f;
     private GameStateManager.GameState previousGameState = GameStateManager.GameState.NORMAL;
 
@@ -112,19 +116,19 @@ public class PlayScene implements Scene, DialogEventListener {
 
     /**
      * Constructs the play scene with all necessary game components.
-     * 
+     *
      * @param sceneManager Manager for scene transitions
      */
     public PlayScene(GameSceneManager sceneManager) {
         // Initialize core components
         initializeSceneComponents(sceneManager);
-        
+
         // Adjust game elements based on selected difficulty
         adjustGameElementsByDifficulty();
-        
+
         // Setup game world
         setupGameWorld();
-        
+
         // Configure input and audio
         configureInputAndAudio();
     }
@@ -164,7 +168,7 @@ public class PlayScene implements Scene, DialogEventListener {
      */
     private void adjustGameElementsByDifficulty() {
         Difficulty difficulty = GameDifficulty.getInstance().getDifficulty();
-        
+
         switch (difficulty) {
             case EASY:
                 speed = 100f;
@@ -200,7 +204,7 @@ public class PlayScene implements Scene, DialogEventListener {
     private void setupGameWorld() {
         // Calculate cell size and maze dimensions
         float cellSize = calculateCellSize();
-        
+
         // Initialize generators
         mazeGenerator = new MazeGenerator(cellSize);
         foodGenerator = new FoodGenerator(cellSize, mazeGenerator, foodDictionary);
@@ -303,11 +307,11 @@ public class PlayScene implements Scene, DialogEventListener {
         Enemy enemy = new Enemy(name, position, texture, speed);
         enemy.setSize(cellSize * 0.8f, cellSize * 0.8f);
         enemy.setPosition(new Vector2(position.x + offset, position.y + offset));
-        
+
         if (playerEntity != null) {
             enemy.setTargetEntity(playerEntity);
         }
-        
+
         return enemy;
     }
 
@@ -338,22 +342,21 @@ public class PlayScene implements Scene, DialogEventListener {
      * Configure input bindings and audio.
      */
     private void configureInputAndAudio() {
-        // Arrow-key movement – directions are reversed in BAD (food-poisoning) mode
+        // Arrow-key movement
         ioManager.addIOBind(ioManager.getKeyboard(), Keys.UP, () -> {
-            boolean rev = GameStateManager.getInstance().getCurrentState() == GameStateManager.GameState.BAD;
-            player.move(rev ? Direction.DOWN : Direction.UP);
+            player.move(Direction.UP);
         }, false);
+
         ioManager.addIOBind(ioManager.getKeyboard(), Keys.DOWN, () -> {
-            boolean rev = GameStateManager.getInstance().getCurrentState() == GameStateManager.GameState.BAD;
-            player.move(rev ? Direction.UP : Direction.DOWN);
+            player.move(Direction.DOWN);
         }, false);
+
         ioManager.addIOBind(ioManager.getKeyboard(), Keys.LEFT, () -> {
-            boolean rev = GameStateManager.getInstance().getCurrentState() == GameStateManager.GameState.BAD;
-            player.move(rev ? Direction.RIGHT : Direction.LEFT);
+            player.move(Direction.LEFT);
         }, false);
+
         ioManager.addIOBind(ioManager.getKeyboard(), Keys.RIGHT, () -> {
-            boolean rev = GameStateManager.getInstance().getCurrentState() == GameStateManager.GameState.BAD;
-            player.move(rev ? Direction.LEFT : Direction.RIGHT);
+            player.move(Direction.RIGHT);
         }, false);
 
         // Pause menu binding
@@ -437,7 +440,7 @@ public class PlayScene implements Scene, DialogEventListener {
     private void setupNutritionistCollisionDetectors(Nutritionist nutritionist) {
         for (int y = 0; y < entityManager.getEntitiesSize(); y++) {
             Entity entityB = entityManager.getEntity(y);
-            
+
             if (entityB instanceof Wall) {
                 CollisionDetector detector = new NutritionistCollideWallDetector(nutritionist, (Wall) entityB);
                 collisionManager.addDetector(detector);
@@ -490,10 +493,10 @@ public class PlayScene implements Scene, DialogEventListener {
      */
     private void updateNutritionist() {
         float deltaTime = Gdx.graphics.getDeltaTime();
-        
+
         // Check if a nutritionist exists
         boolean nutritionistExists = checkNutritionistExists();
-        
+
         // Spawn new nutritionist if needed
         if (!nutritionistExists && nutritionistGenerator.update(deltaTime, nutritionistExists)) {
             spawnNutritionist();
@@ -518,10 +521,10 @@ public class PlayScene implements Scene, DialogEventListener {
      */
     private void spawnNutritionist() {
         Nutritionist newNutritionist = nutritionistGenerator.generateNutritionist(
-            nutritionistTexture, 
+            nutritionistTexture,
             speed * 0.8f
         );
-        
+
         if (newNutritionist != null) {
             entityManager.addEntity(newNutritionist);
             System.out.println("Nutritionist spawned");
@@ -547,13 +550,13 @@ public class PlayScene implements Scene, DialogEventListener {
         if (!showPopup) {
             updateGameState();
         }
-        
+
         // Draw everything
         drawGame(batch);
-        
+
         // Check for game over condition
         checkGameEndCondition();
-        
+
         // Render dialog popups
         dialogPopUpManager.render(batch);
     }
@@ -567,7 +570,7 @@ public class PlayScene implements Scene, DialogEventListener {
     private void checkSecretModeTrigger() {
         GameStateManager manager = GameStateManager.getInstance();
         if (manager.getCurrentState() == GameStateManager.GameState.NORMAL
-                && player.getPoints() >= targetPoint) {
+            && player.getPoints() >= targetPoint) {
             manager.setCurrentState(GameStateManager.GameState.SECRET);
         }
     }
@@ -607,7 +610,7 @@ public class PlayScene implements Scene, DialogEventListener {
     private void onStateEnter(GameStateManager.GameState state) {
         if (state == GameStateManager.GameState.BAD) {
             stateTimer = BAD_MODE_DURATION;
-            player.adjustSpeed(-0.2f);
+            player.adjustSpeed(BAD_SPEED_DELTA);
             swapBackground(badBackground);
             swapWallTextures(badWallTexture);
         } else if (state == GameStateManager.GameState.SECRET) {
@@ -621,7 +624,8 @@ public class PlayScene implements Scene, DialogEventListener {
     /** Undo effects when a temporary state expires. */
     private void onStateExit(GameStateManager.GameState state) {
         if (state == GameStateManager.GameState.BAD) {
-            player.adjustSpeed(0.2f);
+            // Undo the exact BAD slow-down so speed returns to original
+            player.adjustSpeed(-BAD_SPEED_DELTA);
             swapBackground(playBackground);
             swapWallTextures(normalWallTexture);
         } else if (state == GameStateManager.GameState.SECRET) {
@@ -658,18 +662,18 @@ public class PlayScene implements Scene, DialogEventListener {
         // Spawn new entities
         spawnFood();
         updateNutritionist();
-        
+
         // Update collision detectors
         setupCollisionDetectors();
-        
+
         // Update entity movement and removal
         entityManager.moveEntities();
         entityManager.checkForEntitiesToBeRemoved();
-        
+
         // Check collisions
         collisionManager.checkAllCollisions();
         collisionManager.checkForDetectorsToBeRemoved();
-        
+
         // Handle user input
         ioManager.handleInput();
     }
@@ -740,7 +744,7 @@ public class PlayScene implements Scene, DialogEventListener {
      */
     private void checkGameEndCondition() {
         if (showPopup) return;
-        
+
         if (player.getHealth() <= 0) {
             int lives = GameStateManager.getInstance().getLives();
             if (lives <= 0) {
@@ -776,6 +780,7 @@ public class PlayScene implements Scene, DialogEventListener {
         badBackground.dispose();
         secretBackground.dispose();
         normalWallTexture.dispose();
+        badWallTexture.dispose();
         badWallTexture.dispose();
         secretWallTexture.dispose();
         nutritionistTexture.dispose();
