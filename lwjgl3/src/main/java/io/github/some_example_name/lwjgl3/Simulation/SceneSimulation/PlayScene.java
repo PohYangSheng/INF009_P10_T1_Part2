@@ -12,22 +12,20 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 
-import io.github.some_example_name.lwjgl3.Abstract_Engine.CollisionManager.BoundaryCollisionDetector;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.CollisionManager.CollisionPair;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.CollisionManager.CollisionResolution;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.CollisionManager.RectangleCollisionDectector;
+import io.github.some_example_name.lwjgl3.Abstract_Engine.EntityManager.MovableEntity;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.EntityManager.iCollidable;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.MovementManager.MovementManager;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.MovementManager.UserMovement;
 import io.github.some_example_name.lwjgl3.Abstract_Engine.SceneManager.AbstractScene;
-import io.github.some_example_name.lwjgl3.Abstract_Engine.SceneManager.SceneManager;
 
 import io.github.some_example_name.lwjgl3.Simulation.CollisionSimulation.*;
 import io.github.some_example_name.lwjgl3.Simulation.GameEntities.*;
 import io.github.some_example_name.lwjgl3.Simulation.GameUtilities.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Main gameplay scene – the heart of Munch Maze.
@@ -46,7 +44,7 @@ import java.util.List;
  *   Polymorphism – implements IDialogEventListener; both are used via their
  *                  abstract types throughout.
  *   Abstraction  – engine managers are used through their interfaces.
- *   Generics     – UserMovement<Player>, BoundaryCollisionDetector<Enemy>, etc.
+ *   Generics     – UserMovement<Player> and typed collections in the scene.
  *
  * SOLID:
  *   SRP  – each private method has one reason to change.
@@ -78,11 +76,6 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
     private float   playerStartX, playerStartY;
     private float   speed;
     private int     targetPoint;
-
-    // ── Boundary detectors (engine generics) ──────────────────────────────
-    private BoundaryCollisionDetector<Player>             playerBoundary;
-    private final List<BoundaryCollisionDetector<Enemy>>  enemyBoundaries = new ArrayList<>();
-    private BoundaryCollisionDetector<Nutritionist>       nutritionistBoundary;
 
     // ── Textures ───────────────────────────────────────────────────────────
     private Texture normalBg, badBg, secretBg, currentBg;
@@ -189,11 +182,13 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
 
         // Player
         Vector2 sp = mazeGenerator.gridToScreenTopLeft(1, 1);
-        playerStartX = sp.x + cellSize * 0.1f;
-        playerStartY = sp.y + cellSize * 0.1f;
+        float playerRenderSize = cellSize * 0.8f;
+        float playerOffset = cellSize * 0.05f;
+        playerStartX = mazeGenerator.clampX(sp.x + playerOffset, playerRenderSize);
+        playerStartY = mazeGenerator.clampY(sp.y + playerOffset, playerRenderSize);
         Texture playerTex = new Texture(Gdx.files.internal(
             factory.getCharSelection().getSelectedTexturePath()));
-        player = new Player("Player", playerStartX, playerStartY, playerTex, speed, cellSize * 0.8f);
+        player = new Player("Player", playerStartX, playerStartY, playerTex, speed, playerRenderSize);
         entityManager.addEntity(player);
         collisionManager.registerCollidable(player);
 
@@ -201,8 +196,6 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
         userMovement = new UserMovement<>(player, ioManager);
         movementManager.addMovement(userMovement);
 
-        // BoundaryCollisionDetector – engine generic, typed to Player
-        playerBoundary = new BoundaryCollisionDetector<>(player);
 
         // Data-driven enemy spawning
         int[][] spawnPoints = MazeGenerator.getEnemySpawnPoints();
@@ -224,29 +217,15 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
     private void spawnEnemy(String name, Vector2 pos, float cellSize) {
         Texture tex = new Texture(Gdx.files.internal("entities_images/angry_chef.png"));
 
-        float off = cellSize * 0.1f;
-
+        float offset = cellSize * 0.05f;
         float renderSize = cellSize * 0.8f;
-
-        float x = pos.x + off;
-        float y = pos.y + off;
-
-        // Keep the enemies inside the world
-        float worldWidth  = MazeGenerator.getGridWidth() * cellSize;
-        float worldHeight = MazeGenerator.getGridHeight() * cellSize;
-
-        float originX = (Gdx.graphics.getWidth() - worldWidth) / 2f;
-        float originY = (Gdx.graphics.getHeight() - worldHeight) / 2f;
-
-        x = Math.max(originX, Math.min(x, originX + worldWidth - renderSize));
-        y = Math.max(originY, Math.min(y, originY + worldHeight - renderSize));
+        float x = mazeGenerator.clampX(pos.x + offset, renderSize);
+        float y = mazeGenerator.clampY(pos.y + offset, renderSize);
 
         Enemy enemy = new Enemy(name, x, y, tex, speed, renderSize);
-
         enemy.setTarget(player);
         entityManager.addEntity(enemy);
         collisionManager.registerCollidable(enemy);
-        enemyBoundaries.add(new BoundaryCollisionDetector<>(enemy));
     }
 
     /**
@@ -316,8 +295,10 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
         hudStage.addActor(st);
     }
 
-    private Label lbl(String t, Color c) {
-        Label l = new Label(t, skin); l.setColor(c); return l;
+    private Label lbl(String text, Color color) {
+        Label label = new Label(text, skin);
+        label.setColor(color);
+        return label;
     }
 
     // ── Template Method: update ────────────────────────────────────────────
@@ -337,9 +318,6 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
 
         movementManager.update(dt);
 
-        playerBoundary.update();
-        for (BoundaryCollisionDetector<Enemy> bd : enemyBoundaries) bd.update();
-        if (nutritionistBoundary != null) nutritionistBoundary.update();
 
         preRemoveExpiredCollidables();
         entityManager.updateEntities(dt);
@@ -356,11 +334,11 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
             if (n != null) {
                 entityManager.addEntity(n);
                 collisionManager.registerCollidable(n);
-                nutritionistBoundary = new BoundaryCollisionDetector<>(n);
             }
         }
 
         collisionManager.update(dt);
+        keepMazeEntitiesInsideBounds();
         updateStateTimers(dt);
         checkSecretModeTrigger();
         checkGameEndCondition();
@@ -373,6 +351,28 @@ public class PlayScene extends AbstractScene implements IDialogEventListener {
             if (e.shouldBeRemoved())  collisionManager.unregisterCollidable(e);
         for (Nutritionist n : new ArrayList<>(entityManager.getEntitiesOfType(Nutritionist.class)))
             if (n.shouldBeRemoved())  collisionManager.unregisterCollidable(n);
+    }
+
+    private void keepMazeEntitiesInsideBounds() {
+        keepInsideMaze(player);
+
+        for (Enemy enemy : entityManager.getEntitiesOfType(Enemy.class)) {
+            keepInsideMaze(enemy);
+        }
+
+        for (Nutritionist nutritionist : entityManager.getEntitiesOfType(Nutritionist.class)) {
+            keepInsideMaze(nutritionist);
+        }
+    }
+
+    private void keepInsideMaze(MovableEntity entity) {
+        float width = entity.getBounds().width;
+        float height = entity.getBounds().height;
+        float clampedX = mazeGenerator.clampX(entity.getX(), width);
+        float clampedY = mazeGenerator.clampY(entity.getY(), height);
+        if (clampedX != entity.getX() || clampedY != entity.getY()) {
+            entity.setPosition(clampedX, clampedY);
+        }
     }
 
     // ── Template Method: render ────────────────────────────────────────────
