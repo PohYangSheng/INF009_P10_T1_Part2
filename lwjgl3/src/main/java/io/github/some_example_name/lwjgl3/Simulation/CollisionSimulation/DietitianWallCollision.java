@@ -13,7 +13,7 @@ public class DietitianWallCollision {
 
         float overlapX = Math.min(nb.x + nb.width,  wb.x + wb.width)  - Math.max(nb.x, wb.x);
         float overlapY = Math.min(nb.y + nb.height, wb.y + wb.height) - Math.max(nb.y, wb.y);
-        float spd      = n.getSpeed(); 
+        float spd = n.getSpeed();
 
         if (overlapX < overlapY) {
             float newX = nb.x < wb.x ? wb.x - nb.width - 1 : wb.x + wb.width + 1;

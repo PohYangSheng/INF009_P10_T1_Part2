@@ -15,7 +15,7 @@ public class EnemyEnemyCollision {
         float overlapY = Math.min(b1.y + b1.height, b2.y + b2.height) - Math.max(b1.y, b2.y);
 
         Vector2 normal = new Vector2(e2.getX() - e1.getX(), e2.getY() - e1.getY()).nor();
-        float   spd    = e1.getSpeed();
+        float spd = e1.getSpeed();
 
         if (overlapX < overlapY) {
             float push = overlapX / 2f + 1f;

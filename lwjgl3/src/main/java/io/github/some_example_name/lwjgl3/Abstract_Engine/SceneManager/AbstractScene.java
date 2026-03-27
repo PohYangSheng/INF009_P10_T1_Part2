@@ -16,8 +16,8 @@ import java.util.List;
 // base class for all scenes - has the standard lifecycle methods
 public abstract class AbstractScene implements Screen {
 
-    protected final IOManager        ioManager;
-    protected final EntityManager    entityManager;
+    protected final IOManager ioManager;
+    protected final EntityManager entityManager;
     protected final CollisionManager collisionManager;
 
     protected SceneManager sceneManager;
@@ -36,8 +36,8 @@ public abstract class AbstractScene implements Screen {
 
     // constructor
     protected AbstractScene() {
-        this.ioManager        = new IOManager();
-        this.entityManager    = new EntityManager();
+        this.ioManager = new IOManager();
+        this.entityManager = new EntityManager();
         this.collisionManager = new CollisionManager(
             new RectangleCollisionDectector(),
             new CollisionResolution() {
@@ -63,7 +63,7 @@ public abstract class AbstractScene implements Screen {
     public abstract void render(SpriteBatch batch);
 
     @Override public void render(float delta) {
-         
+
     }
     @Override public void show()              {}
     @Override public void resize(int w, int h){}
@@ -74,7 +74,7 @@ public abstract class AbstractScene implements Screen {
     // clean up textures/resources so we dont leak memory
     @Override
     public void dispose() {
-        if (entityManager    != null) entityManager.dispose();
+        if (entityManager != null) entityManager.dispose();
         if (collisionManager != null) collisionManager.dispose();
     }
 }

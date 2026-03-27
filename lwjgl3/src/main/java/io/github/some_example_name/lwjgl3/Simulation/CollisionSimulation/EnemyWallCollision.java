@@ -14,7 +14,7 @@ public class EnemyWallCollision {
 
         float overlapX = Math.min(eb.x + eb.width,  wb.x + wb.width)  - Math.max(eb.x, wb.x);
         float overlapY = Math.min(eb.y + eb.height, wb.y + wb.height) - Math.max(eb.y, wb.y);
-        float spd      = enemy.getSpeed();
+        float spd = enemy.getSpeed();
 
         if (overlapX < overlapY) {
             float newX = eb.x < wb.x ? wb.x - eb.width - 1 : wb.x + wb.width + 1;
